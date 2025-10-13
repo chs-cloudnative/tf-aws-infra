@@ -70,8 +70,8 @@ resource "aws_route" "public_internet_access" {
 
 # Public Route Table Associations
 resource "aws_route_table_association" "public" {
-  count = length(var.public_subnet_cidrs)
-  subnet_id = aws_subnet.public[count.index].id
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
@@ -79,7 +79,7 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name = "${var.vpc_name}-private-rt"
+    Name        = "${var.vpc_name}-private-rt"
     Environment = var.environment
     Type        = "Private"
   }
@@ -87,6 +87,7 @@ resource "aws_route_table" "private" {
 
 # No Private Route: private route table 沒有指向 IGW 表示無法直接連接到網際網路
 
+# Private Route Table Associations
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_cidrs)
   subnet_id      = aws_subnet.private[count.index].id
