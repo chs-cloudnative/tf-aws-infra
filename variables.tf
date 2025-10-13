@@ -3,9 +3,9 @@
 # -------------------------------------------------------------------
 
 variable "aws_region" {
-type        = string
-description = "AWS region where resources will be created"
-default     = "us-east-1"
+  type        = string
+  description = "AWS region where resources will be created"
+  default     = "us-east-1"
 }
 
 variable "aws_profile" {
