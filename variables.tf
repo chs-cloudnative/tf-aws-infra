@@ -63,3 +63,16 @@ variable "environment" {
   description = "Environment name (e.g., dev, demo, prod)"
   default     = "dev"
 }
+
+# EC2 Instance Type
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "key_name" {
+  description = "Name of the EC2 key pair for SSH access"
+  type        = string
+  default     = "csye6225-keypair"
+}
