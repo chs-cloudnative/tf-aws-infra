@@ -22,6 +22,18 @@ resource "aws_instance" "app" {
   vpc_security_group_ids      = [aws_security_group.application.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  # User Data - 在 EC2 啟動時執行
+  user_data = templatefile("${path.module}/user-data.sh", {
+    db_host     = aws_db_instance.main.address
+    db_port     = aws_db_instance.main.port
+    db_name     = aws_db_instance.main.db_name
+    db_user     = aws_db_instance.main.username
+    db_password = var.db_password
+    s3_bucket   = aws_s3_bucket.webapp_images.id
+    aws_region  = var.aws_region
+  })
 
   root_block_device {
     volume_size           = 25
@@ -34,6 +46,9 @@ resource "aws_instance" "app" {
   tags = {
     Name = "${var.vpc_name}-webapp-instance"
   }
+
+  # 確保 RDS 實例先建立完成
+  depends_on = [aws_db_instance.main]
 }
 
 # Output the public IP

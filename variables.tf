@@ -76,3 +76,38 @@ variable "key_name" {
   type        = string
   default     = "csye6225-keypair"
 }
+
+# -------------------------------------------------------------------
+# RDS 相關變數
+# -------------------------------------------------------------------
+
+variable "db_instance_class" {
+  type        = string
+  description = "RDS instance class"
+  default     = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  type        = number
+  description = "Allocated storage for RDS in GB"
+  default     = 20
+}
+
+variable "db_name" {
+  type        = string
+  description = "Database name"
+  default     = "csye6225"
+}
+
+variable "db_username" {
+  type        = string
+  description = "Database master username"
+  default     = "csye6225"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Database master password"
+  sensitive   = true
+  # 注意：實際使用時應該從環境變數或 Terraform Cloud 設定
+}
