@@ -56,6 +56,16 @@ resource "aws_iam_role_policy" "s3_policy" {
 }
 
 # -------------------------------------------------------------------
+# IAM Policy for CloudWatch Agent
+# -------------------------------------------------------------------
+
+# Attach AWS managed CloudWatch Agent policy
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# -------------------------------------------------------------------
 # IAM Instance Profile
 # -------------------------------------------------------------------
 

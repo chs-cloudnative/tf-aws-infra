@@ -111,3 +111,13 @@ variable "db_password" {
   sensitive   = true
   # 注意：實際使用時應該從環境變數或 Terraform Cloud 設定
 }
+
+# -------------------------------------------------------------------
+# Domain Name
+# -------------------------------------------------------------------
+
+variable "domain_name" {
+  type        = string
+  description = "Domain name for Route 53 A record"
+  default     = "dev.chs4150.me"
+}
