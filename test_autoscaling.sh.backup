@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# ===================================================================
+# Optimized Auto Scaling Test Script (Thresholds: 12/8)
+# ===================================================================
+
+set -e
+
+# --- Configuration ---
+DOMAIN="dev.chs4150.me"
+ASG_NAME="csye6225-vpc-webapp-asg"
+TG_ARN="arn:aws:elasticloadbalancing:us-east-1:979067962645:targetgroup/csye6225-vpc-webapp-tg/263f46f09541ce6c"
+PROFILE="dev"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# 提高本地 Open Files 限制
+ulimit -n 2048 2>/dev/null || true
+
+clear
+echo "=========================================="
+echo "   Auto Scaling Test - Final Fix Version  "
+echo "=========================================="
+echo -e "Target: ${CYAN}http://${DOMAIN}${NC}"
+sleep 2
+
+# ===================================================================
+# Step 1: Apply Terraform
+# ===================================================================
+echo -e "\n${BLUE}[1/6] Applying Terraform...${NC}"
+terraform apply -auto-approve > /dev/null 2>&1
+echo -e "${GREEN}✓ Applied. Waiting 30s...${NC}"
+sleep 30
+
+# ===================================================================
+# Step 2: Baseline Check
+# ===================================================================
+echo -e "\n${BLUE}[2/6] Verifying Baseline (3)...${NC}"
+INITIAL_COUNT=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=${ASG_NAME}" "Name=instance-state-name,Values=running" --query 'length(Reservations[*].Instances[*])' --output text --profile ${PROFILE})
+
+if [ "$INITIAL_COUNT" -ne 3 ]; then
+    echo -e "${RED}✗ Error: Found ${INITIAL_COUNT}. Need 3.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Baseline OK.${NC}"
+
+# ===================================================================
+# Step 3: Load Test
+# ===================================================================
+echo -e "\n${BLUE}[3/6] Starting Load Test...${NC}"
+ab -r -k -n 900000 -c 200 http://${DOMAIN}/health > /tmp/ab_result.txt 2>&1 &
+AB_PID=$!
+
+# CPU 監控稍微跑久一點點，確保 Alarm 被觸發
+for i in {1..10}; do
+    sleep 20
+    CPU=$(aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization --dimensions Name=AutoScalingGroupName,Value=${ASG_NAME} --start-time $(date -u -v-5M +%Y-%m-%dT%H:%M:%S) --end-time $(date -u +%Y-%m-%dT%H:%M:%S) --period 60 --statistics Average --profile ${PROFILE} --query 'Datapoints | sort_by(@, &Timestamp) | [-1].Average' --output text 2>/dev/null)
+    
+    printf "Monitor $i/10: CPU = %.2f%%" "${CPU:-0}"
+    if (( $(echo "${CPU:-0} > 12" | bc -l) )); then echo -e " ${GREEN}(ALARM!)${NC}"; else echo ""; fi
+done
+
+kill $AB_PID 2>/dev/null || true
+wait $AB_PID 2>/dev/null || true
+
+# ===================================================================
+# Step 4: Scale Up Detector (15次 x 20秒 = 5分鐘)
+# ===================================================================
+echo -e "\n${BLUE}[4/6] Waiting for Scale Up to 5...${NC}"
+PEAK_COUNT=$INITIAL_COUNT
+
+for i in {1..15}; do
+    CURRENT=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=${ASG_NAME}" "Name=instance-state-name,Values=running,pending" --query 'length(Reservations[*].Instances[*])' --output text --profile ${PROFILE})
+    echo "Check $i/15: Instances = ${CURRENT}"
+    
+    if [ "$CURRENT" -ge 5 ]; then
+        echo -e "${GREEN}✓ Scale Up Success!${NC}"
+        PEAK_COUNT=$CURRENT
+        break
+    fi
+    PEAK_COUNT=$CURRENT
+    sleep 20
+done
+
+# ===================================================================
+# Step 5: Scale Down Detector (15次 x 40秒 = 10分鐘)
+# ===================================================================
+echo -e "\n${BLUE}[5/6] Waiting for Scale Down to 3...${NC}"
+# Scale Down 建議間隔拉長到 40 秒，因為 AWS 指標冷卻較慢
+FINAL_COUNT=$PEAK_COUNT
+
+for i in {1..15}; do
+    CUR_COUNT=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=${ASG_NAME}" "Name=instance-state-name,Values=running" --query 'length(Reservations[*].Instances[*])' --output text --profile ${PROFILE})
+    echo "Check $i/15: Instances = ${CUR_COUNT}"
+    
+    if [ "$CUR_COUNT" -le 3 ]; then
+        echo -e "${GREEN}✓ Returned to 3 instances.${NC}"
+        FINAL_COUNT=$CUR_COUNT
+        break
+    fi
+    FINAL_COUNT=$CUR_COUNT
+    sleep 40 
+done
+
+# ===================================================================
+# Step 6: Final Report
+# ===================================================================
+echo -e "\n${CYAN}==========================================${NC}"
+echo "  TEST RESULTS"
+echo "  - Initial: $INITIAL_COUNT"
+echo "  - Peak:    $PEAK_COUNT"
+echo "  - Final:   $FINAL_COUNT"
+echo -e "${CYAN}==========================================${NC}"
+
+if [ "$PEAK_COUNT" -gt "$INITIAL_COUNT" ] && [ "$FINAL_COUNT" -le 3 ]; then
+    echo -e "${GREEN}★★★ SUCCESS ★★★${NC}"
+else
+    echo -e "${YELLOW}⚠ INCOMPLETE (Check CloudWatch Cooldown)${NC}"
+fi

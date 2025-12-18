@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------
-# IAM Role for EC2 Instance
+# IAM Role for EC2 Instance (Used for create profile)
 # -------------------------------------------------------------------
 
 # EC2 可以擔任的 IAM Role
@@ -27,7 +27,7 @@ resource "aws_iam_role" "ec2_role" {
 }
 
 # -------------------------------------------------------------------
-# IAM Policy for S3 Access
+# IAM Policy - S3 Access
 # -------------------------------------------------------------------
 
 # S3 訪問政策
@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "s3_policy" {
 }
 
 # -------------------------------------------------------------------
-# IAM Policy for CloudWatch Agent
+# IAM Policy - CloudWatch Agent
 # -------------------------------------------------------------------
 
 # Attach AWS managed CloudWatch Agent policy
@@ -66,7 +66,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent_policy" {
 }
 
 # -------------------------------------------------------------------
-# IAM Instance Profile
+# IAM Instance Profile (Entity of the Role)
 # -------------------------------------------------------------------
 
 # Instance Profile - 讓 EC2 可以使用 IAM Role

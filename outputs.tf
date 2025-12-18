@@ -1,6 +1,6 @@
-# -------------------------------------------------------------------
-# VPC Outputs
-# -------------------------------------------------------------------
+# ===================================================================
+# VPC & Network Outputs
+# ===================================================================
 
 output "vpc_id" {
   description = "The ID of the VPC"
@@ -42,24 +42,9 @@ output "availability_zones" {
   value       = slice(data.aws_availability_zones.available.names, 0, 3)
 }
 
-# -------------------------------------------------------------------
-# S3 Outputs
-# -------------------------------------------------------------------
-
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket for images"
-  value       = aws_s3_bucket.webapp_images.id
-}
-
-# Amazon Resource Name
-output "s3_bucket_arn" {
-  description = "ARN of the S3 bucket"
-  value       = aws_s3_bucket.webapp_images.arn
-}
-
-# -------------------------------------------------------------------
+# ===================================================================
 # Security Group Outputs
-# -------------------------------------------------------------------
+# ===================================================================
 
 output "application_security_group_id" {
   description = "ID of the application security group"
@@ -71,33 +56,14 @@ output "database_security_group_id" {
   value       = aws_security_group.database.id
 }
 
-# -------------------------------------------------------------------
-# RDS Outputs
-# -------------------------------------------------------------------
-
-output "rds_endpoint" {
-  description = "RDS instance endpoint"
-  value       = aws_db_instance.main.endpoint
+output "load_balancer_security_group_id" {
+  description = "ID of the load balancer security group"
+  value       = aws_security_group.load_balancer.id
 }
 
-output "rds_address" {
-  description = "RDS instance address (hostname)"
-  value       = aws_db_instance.main.address
-}
-
-output "rds_port" {
-  description = "RDS instance port"
-  value       = aws_db_instance.main.port
-}
-
-output "rds_database_name" {
-  description = "RDS database name"
-  value       = aws_db_instance.main.db_name
-}
-
-# -------------------------------------------------------------------
+# ===================================================================
 # IAM Outputs
-# -------------------------------------------------------------------
+# ===================================================================
 
 output "iam_role_name" {
   description = "Name of the IAM role for EC2"

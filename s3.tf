@@ -53,3 +53,17 @@ resource "aws_s3_bucket_public_access_block" "webapp_images" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ===================================================================
+# S3 Outputs
+# ===================================================================
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for images"
+  value       = aws_s3_bucket.webapp_images.id
+}
+
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = aws_s3_bucket.webapp_images.arn
+}
