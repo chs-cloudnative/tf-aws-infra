@@ -1,0 +1,48 @@
+# =================================================================================
+# Terraform Variables Configuration Example
+# =================================================================================
+# Purpose: 
+#   Template for terraform.tfvars - copy and fill in your own values
+#
+# Usage:
+#   cp terraform.tfvars.example terraform.tfvars
+#   # Edit terraform.tfvars with your actual values
+# =================================================================================
+
+# Project Configuration
+project_name = "product-service"
+environment  = "dev"  # or "demo", "prod"
+
+# AWS Configuration
+aws_region  = "us-east-1"
+aws_profile = "dev"
+
+# Network Configuration
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
+
+# Compute Configuration
+instance_type        = "t2.micro"
+key_name             = "your-keypair-name"  # CHANGE THIS
+asg_min_size         = 3
+asg_max_size         = 5
+asg_desired_capacity = 3
+
+# Database Configuration
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_name              = "productdb"
+db_username          = "dbadmin"
+
+# Domain Configuration
+domain_name = "dev.yourdomain.com"  # CHANGE THIS
+
+# External Services Configuration
+mailgun_api_key = "your-mailgun-api-key"     # CHANGE THIS
+mailgun_domain  = "your-mailgun-domain.org"  # CHANGE THIS
+
+# Lambda Configuration
+lambda_runtime     = "python3.11"
+lambda_timeout     = 30
+lambda_memory_size = 256

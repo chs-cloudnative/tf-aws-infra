@@ -1,0 +1,27 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform-checks: # Job 名稱
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive # -check: check but no revision, -recursive: check nested structure
+
+      - name: Terraform Init
+        run: terraform init # Initialize Terraform and download providers
+
+      - name: Terraform Validate
+        run: terraform validate

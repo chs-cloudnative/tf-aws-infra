@@ -1,0 +1,79 @@
+# =================================================================================
+# Terraform State Files
+# =================================================================================
+# These files contain the current state of your infrastructure
+# WHY SENSITIVE: Contains resource IDs, passwords, ARNs, AWS account info
+# NEVER commit these - they expose your entire infrastructure details
+
+.terraform/                  # Terraform plugins and modules cache
+.terraform.lock.hcl         # Provider version lock file (can commit, but optional)
+terraform.tfstate           # Current infrastructure state (HIGHLY SENSITIVE)
+terraform.tfstate.backup    # Previous state backup (HIGHLY SENSITIVE)
+*.tfstate                   # Any state files
+*.tfstate.*                 # State file variations
+tfplan                      # Saved execution plan (may contain sensitive data)
+*.tfplan                    # Any plan files
+
+# =================================================================================
+# Terraform Variables
+# =================================================================================
+# These files contain actual values for your infrastructure
+# WHY SENSITIVE: Contains passwords, API keys, database credentials
+
+terraform.tfvars            # Your actual variable values (CONTAINS SECRETS)
+*.auto.tfvars              # Auto-loaded variable files (CONTAINS SECRETS)
+
+# =================================================================================
+# Lambda Deployment Packages
+# =================================================================================
+# These are build artifacts that should be regenerated
+# WHY IGNORE: Binary files, can be rebuilt from source code
+
+lambda_placeholder.zip      # Temporary placeholder for Lambda
+lambda_function.zip         # Actual Lambda deployment package
+*.zip                       # All zip files (build artifacts)
+
+# =================================================================================
+# Log Files
+# =================================================================================
+# These are runtime logs and debug outputs
+# WHY IGNORE: Temporary, regenerated on each run, may contain sensitive info
+
+*.log                       # All log files
+
+# =================================================================================
+# Operating System Files
+# =================================================================================
+# These are OS-specific metadata files
+# WHY IGNORE: Not needed for the project, OS-specific junk
+
+.DS_Store                   # macOS folder metadata
+Thumbs.db                   # Windows image cache
+
+# =================================================================================
+# IDE Configuration
+# =================================================================================
+# These are IDE-specific settings and caches
+# WHY IGNORE: Personal preferences, not needed by others
+
+.vscode/                    # VS Code settings
+.idea/                      # IntelliJ IDEA settings
+*.swp                       # Vim swap files
+*.swo                       # Vim swap files
+
+# =================================================================================
+# Backup Files
+# =================================================================================
+# These are editor backup files
+# WHY IGNORE: Temporary, not needed
+
+*~                          # Unix backup files
+*.bak                       # Generic backup files
+
+# =================================================================================
+# Archived Old Structure
+# =================================================================================
+# This directory contains the old flat Terraform structure (pre-refactor)
+# WHY IGNORE: Archived for reference, not part of active codebase
+
+old_flat_structure/         # Old flat structure backup
