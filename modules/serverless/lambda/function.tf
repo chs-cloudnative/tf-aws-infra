@@ -48,6 +48,14 @@ resource "aws_lambda_function" "email_handler" {
     }
   }
 
+  # Lambda code 由 CI/CD 管理，Terraform 不要覆蓋
+  lifecycle {
+    ignore_changes = [
+      source_code_hash,
+      filename,
+    ]
+  }
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-email-handler"
     Environment = var.environment

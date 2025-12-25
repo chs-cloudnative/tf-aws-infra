@@ -77,6 +77,7 @@ resource "aws_launch_template" "webapp" {
     db_password_secret_arn = var.db_password_secret_arn
     s3_bucket              = var.s3_bucket_id
     aws_region             = var.aws_region
+    sns_topic_arn          = var.sns_topic_arn
   }))
 
   # Block device mapping (EBS volume)
@@ -88,8 +89,7 @@ resource "aws_launch_template" "webapp" {
       volume_type           = "gp2"
       delete_on_termination = true
       encrypted             = true
-      # Temporarily use AWS managed key instead of customer-managed KMS
-      # kms_key_id            = var.kms_ebs_key_arn
+      # Use AWS managed key instead of customer-managed KMS, so no kms key id here
     }
   }
 

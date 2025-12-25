@@ -1,15 +1,15 @@
 #!/bin/bash
-# ===================================================================
+# =================================================================================
 # EC2 User Data Script - Application Initialization
-# ===================================================================
+# =================================================================================
 # Purpose: Configure and start application on EC2 instance launch
 # Execution: Automatically run by cloud-init on first boot
 
 set -e
 
-# ===================================================================
+# =================================================================================
 # Logging Setup
-# ===================================================================
+# =================================================================================
 
 LOG_FILE="/var/log/user-data.log"
 
@@ -19,9 +19,9 @@ log_message() {
 
 log_message "User Data script started"
 
-# ===================================================================
+# =================================================================================
 # Retrieve Database Password from Secrets Manager
-# ===================================================================
+# =================================================================================
 
 log_message "Retrieving database password from Secrets Manager"
 
@@ -38,13 +38,13 @@ fi
 
 log_message "Database password retrieved successfully"
 
-# ===================================================================
+# =================================================================================
 # Create Application Environment File
-# ===================================================================
+# =================================================================================
 
 log_message "Creating application environment file"
 
-cat > /opt/csye6225/.env << EOF
+cat > /opt/productservice/.env << EOF
 # Database Configuration
 DB_HOST=${db_host}
 DB_PORT=${db_port}
@@ -56,22 +56,26 @@ DB_PASSWORD=$DB_PASSWORD
 S3_BUCKET=${s3_bucket}
 AWS_REGION=${aws_region}
 
+# SNS Configuration
+SNS_TOPIC_ARN=${sns_topic_arn}
+
 # Application Configuration
 SPRING_PROFILES_ACTIVE=prod
 EOF
 
 # Set file permissions
-chown csye6225:csye6225 /opt/csye6225/.env
-chmod 600 /opt/csye6225/.env
+chown productservice:productservice /opt/productservice/.env
+chmod 600 /opt/productservice/.env
 
 log_message "Environment file created and configured"
 log_message "DB_HOST=${db_host}"
 log_message "DB_PASSWORD retrieved from Secrets Manager"
 log_message "S3_BUCKET=${s3_bucket}"
+log_message "SNS_TOPIC_ARN configured"
 
-# ===================================================================
+# =================================================================================
 # Start Application Service
-# ===================================================================
+# =================================================================================
 
 log_message "Starting application service"
 
@@ -79,32 +83,32 @@ log_message "Starting application service"
 systemctl daemon-reload
 
 # Enable service to start on boot
-systemctl enable csye6225.service
+systemctl enable productservice.service
 
 # Start the service
-systemctl restart csye6225.service
+systemctl restart productservice.service
 
 # Wait for service to initialize
 sleep 5
 
 # Verify service status
-if systemctl is-active --quiet csye6225.service; then
+if systemctl is-active --quiet productservice.service; then
     log_message "Application service started successfully"
 else
     log_message "ERROR: Application service failed to start"
-    systemctl status csye6225.service >> $LOG_FILE 2>&1
+    systemctl status productservice.service >> $LOG_FILE 2>&1
 fi
 
-# ===================================================================
+# =================================================================================
 # Configure and Start CloudWatch Agent
-# ===================================================================
+# =================================================================================
 
 log_message "Configuring CloudWatch Agent"
 
 # Create logs directory if not exists
-mkdir -p /opt/csye6225/logs
-chown csye6225:csye6225 /opt/csye6225/logs
-chmod 755 /opt/csye6225/logs
+mkdir -p /opt/productservice/logs
+chown productservice:productservice /opt/productservice/logs
+chmod 755 /opt/productservice/logs
 
 # Start CloudWatch Agent with configuration
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
@@ -126,8 +130,8 @@ else
     log_message "WARNING: CloudWatch Agent may not be running properly"
 fi
 
-# ===================================================================
+# =================================================================================
 # Script Completion
-# ===================================================================
+# =================================================================================
 
 log_message "User Data script completed successfully"

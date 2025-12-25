@@ -40,7 +40,7 @@ resource "aws_secretsmanager_secret" "db_password" {
   name                    = "${var.project_name}/${var.environment}/rds/password"
   description             = "RDS PostgreSQL database master password"
   kms_key_id              = var.kms_secrets_key_id
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-db-password"
@@ -64,7 +64,7 @@ resource "aws_secretsmanager_secret" "mailgun_api_key" {
   name                    = "${var.project_name}/${var.environment}/email/mailgun-api-key"
   description             = "Mailgun API key for sending verification emails"
   kms_key_id              = var.kms_secrets_key_id
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-mailgun-api-key"
@@ -88,7 +88,7 @@ resource "aws_secretsmanager_secret" "mailgun_domain" {
   name                    = "${var.project_name}/${var.environment}/email/mailgun-domain"
   description             = "Mailgun domain for sending verification emails"
   kms_key_id              = var.kms_secrets_key_id
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-mailgun-domain"

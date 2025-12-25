@@ -2,11 +2,18 @@
 set -e
 
 # ===================================================================
-# Configuration
+# Auto Scaling Test Script - Product Service
 # ===================================================================
-DOMAIN="dev.chs4150.me"
-ASG="csye6225-vpc-webapp-asg"
-TG="arn:aws:elasticloadbalancing:us-east-1:979067962645:targetgroup/csye6225-vpc-webapp-tg/263f46f09541ce6c"
+# Purpose: Test auto scaling behavior under load
+# Expected: Scale 3 → 5 → 3 instances (~20 minutes)
+# ===================================================================
+
+# ===================================================================
+# Configuration - Auto-detected from Terraform
+# ===================================================================
+DOMAIN=$(terraform output -raw application_url | sed 's|http://||')
+ASG=$(terraform output -raw autoscaling_group_name)
+TG=$(terraform output -raw target_group_arn)
 P="dev"
 
 # ===================================================================
@@ -26,8 +33,17 @@ ulimit -n 2048 2>/dev/null || true
 clear
 
 # ===================================================================
+# Display Configuration
+# ===================================================================
+echo -e "${C}========== Configuration ==========${N}"
+echo "Domain:  ${DOMAIN}"
+echo "ASG:     ${ASG}"
+echo "TG:      ${TG}"
+echo "Profile: ${P}"
+echo ""
+
+# ===================================================================
 # Step 1: Infrastructure Deployment and Health Verification
-# 部署 Terraform 基礎設施並驗證 ALB 和應用程式的健康狀態
 # ===================================================================
 echo -e "${B}[1/6] Apply & Health Check${N}"
 
@@ -43,7 +59,7 @@ for i in {1..3}; do
     } || {
         echo "⚠ ALB down (attempt $i/3)"
         if [ $i -eq 3 ]; then
-            terraform apply -replace="aws_lb.webapp" -replace="aws_lb_listener.http" -auto-approve > /dev/null 2>&1
+            terraform apply -replace="module.compute.aws_lb.webapp" -replace="module.compute.aws_lb_listener.http" -auto-approve > /dev/null 2>&1
             sleep 120
         fi
         sleep 10
@@ -51,18 +67,16 @@ for i in {1..3}; do
 done
 
 # ===================================================================
-# Display Current Infrastructure Information
-# 顯示當前環境配置、CloudWatch 警報狀態、運行中的實例和目標組健康狀況
+# Display Current Infrastructure
 # ===================================================================
-echo -e "\n${C}========== Configuration ==========${N}"
-echo "Domain:  ${DOMAIN}"
-echo "ALB:     $(terraform output -raw load_balancer_dns 2>/dev/null)"
-echo "ASG:     ${ASG}"
 echo ""
 
-# Display CloudWatch alarms
+# Display CloudWatch alarms (auto-detect alarm names)
+ALARM_HIGH="product-service-${P}-cpu-high"
+ALARM_LOW="product-service-${P}-cpu-low"
+
 aws cloudwatch describe-alarms \
-    --alarm-names csye6225-vpc-cpu-high csye6225-vpc-cpu-low \
+    --alarm-names ${ALARM_HIGH} ${ALARM_LOW} \
     --profile ${P} \
     --query 'MetricAlarms[*].[AlarmName,Threshold,StateValue]' \
     --output table \
@@ -91,7 +105,6 @@ sleep 3
 
 # ===================================================================
 # Step 2: Baseline Verification
-# 驗證初始狀態確保 ASG 有正確的 3 個運行實例作為測試基準
 # ===================================================================
 echo -e "${B}[2/6] Baseline Check${N}"
 
@@ -110,7 +123,6 @@ fi
 
 # ===================================================================
 # Step 3: Load Testing and CPU Monitoring
-# 執行 Apache Bench 負載測試並持續監控 CPU 使用率以觸發 Scale Up
 # ===================================================================
 echo -e "\n${B}[3/6] Load Test${N}"
 
@@ -152,7 +164,6 @@ echo -e "${G}✓ Done${N}"
 
 # ===================================================================
 # Step 4: Scale Up Verification
-# 監控並驗證 ASG 是否成功擴展到 5 個實例以應對高負載
 # ===================================================================
 echo -e "\n${B}[4/6] Scale Up${N}"
 
@@ -179,7 +190,6 @@ done
 
 # ===================================================================
 # Step 5: Scale Down Verification
-# 監控 CPU 降低後 ASG 是否成功縮減回 3 個實例
 # ===================================================================
 echo -e "\n${B}[5/6] Scale Down${N}"
 
@@ -226,7 +236,6 @@ done
 
 # ===================================================================
 # Step 6: Test Report and Summary
-# 生成完整測試報告包含擴展統計、ASG 活動記錄和最終結果評估
 # ===================================================================
 echo -e "\n${C}========== REPORT ==========${N}"
 echo "Initial: $I | Peak: $P_CNT | Final: $F_CNT"

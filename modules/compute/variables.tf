@@ -121,5 +121,5 @@ variable "s3_bucket_arn" {
 # Serverless
 variable "sns_topic_arn" {
   type        = string
-  description = "SNS topic ARN"
+  description = "ARN of the SNS topic for email verification"
 }
