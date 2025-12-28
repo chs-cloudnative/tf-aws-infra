@@ -1,12 +1,12 @@
 # =================================================================================
-# Module: dns/variables
+# Module: dns/dev/variables
 # =================================================================================
-# Purpose: Input variables for DNS module
+# Purpose: Input variables for Dev DNS module
 # =================================================================================
 
-variable "domain_name" {
+variable "dev_domain" {
   type        = string
-  description = "Domain name for the application"
+  description = "Dev domain name (e.g., dev.chs4150.me)"
 }
 
 variable "load_balancer_dns_name" {
@@ -16,5 +16,5 @@ variable "load_balancer_dns_name" {
 
 variable "load_balancer_zone_id" {
   type        = string
-  description = "Application Load Balancer zone ID"
+  description = "Application Load Balancer hosted zone ID"
 }

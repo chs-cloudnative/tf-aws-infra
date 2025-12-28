@@ -202,14 +202,47 @@ output "target_group_arn" {
 # DNS Outputs
 # =================================================================================
 
+# Dev DNS Outputs
+output "dev_zone_id" {
+  description = "Dev Hosted Zone ID"
+  value       = module.dns_dev.dev_zone_id
+}
+
+output "dev_name_servers" {
+  description = "Dev Zone Name Servers"
+  value       = module.dns_dev.dev_name_servers
+}
+
+output "dev_record_fqdn" {
+  description = "Dev A record FQDN"
+  value       = module.dns_dev.dev_record_fqdn
+}
+
+# Root DNS Outputs
+output "root_zone_id" {
+  description = "Root Hosted Zone ID"
+  value       = module.dns_root.root_zone_id
+}
+
+output "root_name_servers" {
+  description = "⚠️  Root Zone Name Servers - Update in Namecheap!"
+  value       = module.dns_root.root_name_servers
+}
+
+output "dev_delegation_name_servers" {
+  description = "Dev delegation NS values (auto-synced from Dev Zone)"
+  value       = module.dns_root.dev_delegation_name_servers
+}
+
+# application
 output "application_url" {
   description = "Application URL"
-  value       = "http://${module.dns.route53_record_fqdn}"
+  value       = "http://${module.dns_dev.dev_record_fqdn}"
 }
 
 output "route53_record_fqdn" {
-  description = "Route53 record FQDN"
-  value       = module.dns.route53_record_fqdn
+  description = "Route53 record FQDN (alias for dev_record_fqdn)"
+  value       = module.dns_dev.dev_record_fqdn
 }
 
 # =================================================================================
@@ -223,6 +256,52 @@ output "deployment_summary" {
     environment = var.environment
     region      = var.aws_region
     vpc_cidr    = var.vpc_cidr
-    app_url     = "http://${module.dns.route53_record_fqdn}"
+    app_url     = "http://${module.dns_dev.dev_record_fqdn}"
   }
+}
+
+# =================================================================================
+# Post-Deployment Instructions
+# =================================================================================
+
+output "post_deployment_instructions" {
+  description = "Post-deployment instructions"
+  value       = <<-EOT
+  
+  ═══════════════════════════════════════════════════════
+  🎉 Deployment Complete!
+  ═══════════════════════════════════════════════════════
+  
+  📋 Root Zone Name Servers (chs4150.me):
+  ${join("\n  ", module.dns_root.root_name_servers)}
+  
+  ⚠️  ACTION REQUIRED (One-time):
+  
+  Update Root Name Servers in Namecheap:
+  1. Login: https://www.namecheap.com/myaccount/login/
+  2. Domain List → Manage (chs4150.me)
+  3. Nameservers → Custom DNS
+  4. Enter the 4 Name Servers above
+  5. Save
+  
+  ⏱️  DNS propagation: 15-30 minutes
+  
+  ─────────────────────────────────────────────────────
+  
+  📋 Dev Zone Name Servers (dev.chs4150.me):
+  ${join("\n  ", module.dns_dev.dev_name_servers)}
+  
+  ✅ Auto-synced to Root delegation record
+  
+  ─────────────────────────────────────────────────────
+  
+  🌐 Application URL (after DNS propagation):
+      http://${var.domain_name}
+  
+  🔍 Verify deployment:
+      ./scripts/check-nameservers.sh
+  
+  ═══════════════════════════════════════════════════════
+  
+  EOT
 }
