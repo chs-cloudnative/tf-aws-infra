@@ -11,7 +11,7 @@
 #   4. Storage - S3 bucket for product images
 #   5. Serverless - SNS topic and Lambda function for email verification
 #   6. Compute - EC2 Auto Scaling, Application Load Balancer
-#   7. DNS - Route53 A record pointing to ALB
+#   7. DNS - Route53 (root + dev hosted zones) + Dev A record pointing to ALB
 #
 # Module Dependencies (Resolved):
 #   networking → security → (database, storage, sns) → (lambda, compute) → dns
@@ -149,11 +149,39 @@ module "lambda" {
 # =================================================================================
 # Module 8: DNS (Route53)
 # =================================================================================
+# Purpose: DNS management (Dev + Root Hosted Zones)
+# Dependencies: compute (for ALB DNS name)
+# 
+# Architecture:
+#   Root Zone (chs4150.me) → Dev Zone (dev.chs4150.me) → ALB
+# =================================================================================
 
-module "dns" {
-  source = "./modules/dns"
+# ---------------------------------------------------------------------------------
+# Dev DNS - Hosted Zone and Application Records
+# ---------------------------------------------------------------------------------
 
-  domain_name            = var.domain_name
+module "dns_dev" {
+  source = "./modules/dns/dev"
+
+  dev_domain             = var.domain_name
   load_balancer_dns_name = module.compute.load_balancer_dns_name
   load_balancer_zone_id  = module.compute.load_balancer_zone_id
+}
+
+# ---------------------------------------------------------------------------------
+# Root DNS - Root Hosted Zone and Subdomain Delegation
+# ---------------------------------------------------------------------------------
+
+module "dns_root" {
+  source = "./modules/dns/root"
+
+  providers = {
+    aws = aws.root  # ← 使用 Root Account provider
+  }
+
+  root_domain = "chs4150.me"
+  dev_domain  = var.domain_name
+  dev_name_servers = module.dns_dev.dev_name_servers  # ← 傳入 Dev NS
+
+  depends_on = [module.dns_dev]
 }
