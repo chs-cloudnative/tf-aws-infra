@@ -176,12 +176,12 @@ module "dns_root" {
   source = "./modules/dns/root"
 
   providers = {
-    aws = aws.root  # ← 使用 Root Account provider
+    aws = aws.root # ← 使用 Root Account provider
   }
 
-  root_domain = "chs4150.me"
-  dev_domain  = var.domain_name
-  dev_name_servers = module.dns_dev.dev_name_servers  # ← 傳入 Dev NS
+  root_domain      = "chs4150.me"
+  dev_domain       = var.domain_name
+  dev_name_servers = module.dns_dev.dev_name_servers # ← 傳入 Dev NS
 
   depends_on = [module.dns_dev]
 }
